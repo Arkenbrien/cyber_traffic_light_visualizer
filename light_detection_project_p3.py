@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # ****************************************************************************
 # Copyright 2018 The Apollo Authors. All Rights Reserved.
@@ -23,7 +23,6 @@ from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from traffic_light_what_pb2 import TrafficLightDetection, TrafficLightDebug, TrafficLight
 import time
 import numpy as np
-
 import cv2
 
 class traffic_img_listener:
@@ -49,12 +48,17 @@ class traffic_img_listener:
     def tl_info_callback(self, tl_msg):
         # print(tl_msg)
         self.tl_info = tl_msg
-
-
-    # def tl_debug_callback(self, tl_msg):
-    #     self.tl_debug = tl_msg
-
+        
     
+    def box_printer(self, roi, bColor):
+        for b in roi:
+            cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width), bColor, 2)
+            
+    def debug_box_printer(self, roi, bColor):
+        for b in roi:
+            cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
+            if hasattr(b, 'selected') and b.selected==True:
+                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),(255,255,255), 2)  
 
 if __name__ == '__main__':
     traffic_light_handler = traffic_img_listener()
@@ -103,32 +107,20 @@ if __name__ == '__main__':
 
             cv2.rectangle(img,(x, y),(x+width, y+width),color, 5)
             
-            for b in traffic_light_handler.tl_info.traffic_light_debug.crop_roi:
-                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
-
-            for b in traffic_light_handler.tl_info.traffic_light_debug.projected_roi:
-                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
-
-            for b in traffic_light_handler.tl_info.traffic_light_debug.rectified_roi:
-                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
-            
-            for b in traffic_light_handler.tl_info.traffic_light_debug.debug_roi:
-                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
-
-            
-            for b in traffic_light_handler.tl_info.traffic_light_debug.box:
-                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
-                if hasattr(b, 'selected') and b.selected==True:
-                    cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),(255,255,255), 2)
+            traffic_light_handler.box_printer(traffic_light_handler.tl_info.traffic_light_debug.crop_roi, color)
+            traffic_light_handler.box_printer(traffic_light_handler.tl_info.traffic_light_debug.projected_roi, color)
+            traffic_light_handler.box_printer(traffic_light_handler.tl_info.traffic_light_debug.rectified_roi, color)
+            traffic_light_handler.box_printer(traffic_light_handler.tl_info.traffic_light_debug.debug_roi, color)
+            traffic_light_handler.box_printer(traffic_light_handler.tl_info.traffic_light_debug.box, color)
 
             # font 
             font = cv2.FONT_HERSHEY_SIMPLEX 
             
             # org 
-            org = (50, 50) 
-
+            corg = (50, 50) 
+            dorg = (50, 90)
             cString = cString+": "+str(round(traffic_light_handler.tl_info.traffic_light[0].confidence,4))
-            
+            dString = "distance to stop: "+str(round(traffic_light_handler.tl_info.traffic_light_debug.distance_to_stop_line,4))
             # fontScale 
             fontScale = 1
             
@@ -136,24 +128,27 @@ if __name__ == '__main__':
             thickness = 2
             
             # Using cv2.putText() method 
-            cv2.putText(img, cString, org, font,  
+            cv2.putText(img, cString, corg, font,  
                             fontScale, color, thickness, cv2.LINE_AA) 
             
-            cv2.putText(img, "distance to stop: "+str(round(traffic_light_handler.tl_info.traffic_light_debug.distance_to_stop_line,4)), (50,90), font,  
+            cv2.putText(img, dString, dorg, font,  
                         fontScale, color, thickness, cv2.LINE_AA) 
             
-            img = cv2.resize(img, (640,480))
+            img = cv2.resize(img, (1360,768))
                         
 
             cv2.imshow('Image', img)
             cv2.waitKey(1)
+
+            # iheight, iwidth = img.shape[:2]
+            # print(iheight, iwidth)
         # except:
         #         continue
     
 
     cyber.shutdown()
 
-
+# traffic_light dir
 # ['ByteSize', 'CAMERA_FRONT_LONG', 'CAMERA_FRONT_NARROW', 'CAMERA_FRONT_SHORT', 
 # 'CAMERA_FRONT_WIDE', 'CAMERA_ID_FIELD_NUMBER', 'CONTAIN_LIGHTS_FIELD_NUMBER', 
 # 'CameraID', 'Clear', 'ClearExtension', 'ClearField', 'CopyFrom', 'DESCRIPTOR', 
