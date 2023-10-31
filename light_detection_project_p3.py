@@ -20,7 +20,7 @@
 
 from cyber_py import cyber
 from modules.drivers.proto.sensor_image_pb2 import CompressedImage
-from traffic_light_custom import TrafficLightDetection
+from traffic_light_what_pb2 import TrafficLightDetection, TrafficLightDebug, TrafficLight
 import time
 import numpy as np
 
@@ -28,69 +28,127 @@ import cv2
 
 class traffic_img_listener:
     def __init__(self):
-        self.camera_topic = "/apollo/sensor/camera/front_6mm/image/compressed"
-        self.traffic_light_topic     = "/apollo/sensor/camera/front_6mm/image/compressed"
+
+        self.camera_topic_25mm = "/apollo/sensor/camera/front_25mm/image/compressed"
+        self.camera_topic_06mm = "/apollo/sensor/camera/front_6mm/image/compressed"
+
+        self.traffic_light_topic     = "/apollo/perception/traffic_light"
 
 
-    def image_callback(self, msg_camera):
-        print("py:reader callback msg->:")
-        # print(data)
-        # msg_camera = CompressedImage()
-        # print(msg_camera.data)
-        # start_time = time.time()
-        # while 1:
+    def image_callback_6mm(self, msg_camera):
         decoded_image = cv2.imdecode(np.frombuffer(msg_camera.data, np.uint8), cv2.IMREAD_COLOR)
         rgb_image = cv2.cvtColor(decoded_image, cv2.COLOR_BGR2RGB)
-        self.image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
-        # print(time.time()-start_time)
-        # cv2.imwrite('output_image.jpg', image)
+        self.image_6mm = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
 
-        # cv2.imshow('Image', self.image)
-        # cv2.waitKey(1)
-        # print(type(msg_camera))
-        # print(dir(msg_camera))
+    def image_callback_25mm(self, msg_camera):
+        decoded_image = cv2.imdecode(np.frombuffer(msg_camera.data, np.uint8), cv2.IMREAD_COLOR)
+        rgb_image = cv2.cvtColor(decoded_image, cv2.COLOR_BGR2RGB)
+        self.image_25mm = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
 
-        # print('SUCESS! (?????)')
-        # time.sleep(10000)
-        # msg_camera.ParseFromString(str(msg_camera))
-        # print(msg_camera)
-        # print("=" * 80)
 
-    def tl_callback(self, tl_msg):
-        # print(type(traffic_light))
-        # print(dir(traffic_light))
-        # print(tl_msg.contain_lights)
-        time.sleep(10000)
+    def tl_info_callback(self, tl_msg):
+        # print(tl_msg)
+        self.tl_info = tl_msg
 
-    # def traffic_light_listener(self):
-    #     # tl_node = cyber.Node("listener")
-    #     tl_node.create_reader(self.traffic_light_topic, TrafficLightDetection, self.tl_callback)
-    #     # tl_node.spin()
 
-    # def camera_listener(self):
-    #     # camera_node = cyber.Node("listener")
-    #     camera_node.create_reader(self.camera_topic, CompressedImage, self.image_callback)
-    #     camera_node.spin()
+    # def tl_debug_callback(self, tl_msg):
+    #     self.tl_debug = tl_msg
+
+    
 
 if __name__ == '__main__':
     traffic_light_handler = traffic_img_listener()
-    
 
-    cyber.init()
-    
+    cyber.init()    
     tl_node = cyber.Node("listener")
 
-    # tl_node.create_reader(traffic_light_handler.traffic_light_topic, TrafficLightDetection, traffic_light_handler.tl_callback)
-    tl_node.create_reader(traffic_light_handler.camera_topic, CompressedImage, traffic_light_handler.image_callback)
+    time.sleep(1)
 
-    time.sleep(5)
+    tl_node.create_reader(traffic_light_handler.traffic_light_topic, TrafficLightDetection, traffic_light_handler.tl_info_callback)
+    tl_node.create_reader(traffic_light_handler.camera_topic_06mm, CompressedImage, traffic_light_handler.image_callback_6mm)
+    tl_node.create_reader(traffic_light_handler.camera_topic_25mm, CompressedImage, traffic_light_handler.image_callback_25mm)
 
+    time.sleep(1)
     while 1:
-        try:
-            cv2.imshow('Image', traffic_light_handler.image)
+        # try:
+
+        if traffic_light_handler.tl_info.contain_lights:
+            # print(traffic_light_handler.tl_info)
+
+            if traffic_light_handler.tl_info.camera_id == 2:
+               img = traffic_light_handler.image_6mm
+            elif traffic_light_handler.tl_info.camera_id == 0:
+               img = traffic_light_handler.image_25mm
+
+            colorState = traffic_light_handler.tl_info.traffic_light[0].color
+            if colorState == 3:
+                color = (0,255,0)
+                cString = "green"
+            elif colorState == 1:
+                color = (0,0,255)
+                cString = "red"
+            elif colorState == 2:
+                color = (0,255,255)
+                cString = "yellow"
+            elif colorState == 0:
+                color = (0,0,0)
+                cString = "unknown"
+
+            x =  traffic_light_handler.tl_info.traffic_light_debug.cropbox.x
+            y =  traffic_light_handler.tl_info.traffic_light_debug.cropbox.y
+            width =  traffic_light_handler.tl_info.traffic_light_debug.cropbox.width
+            height =  traffic_light_handler.tl_info.traffic_light_debug.cropbox.height
+
+            # print(traffic_light_handler.tl_info.traffic_light_debug.box)
+
+            cv2.rectangle(img,(x, y),(x+width, y+width),color, 5)
+            
+            for b in traffic_light_handler.tl_info.traffic_light_debug.crop_roi:
+                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
+
+            for b in traffic_light_handler.tl_info.traffic_light_debug.projected_roi:
+                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
+
+            for b in traffic_light_handler.tl_info.traffic_light_debug.rectified_roi:
+                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
+            
+            for b in traffic_light_handler.tl_info.traffic_light_debug.debug_roi:
+                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
+
+            
+            for b in traffic_light_handler.tl_info.traffic_light_debug.box:
+                cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),color, 2)
+                if hasattr(b, 'selected') and b.selected==True:
+                    cv2.rectangle(img,(b.x, b.y),(b.x+b.width, b.y+b.width),(255,255,255), 2)
+
+            # font 
+            font = cv2.FONT_HERSHEY_SIMPLEX 
+            
+            # org 
+            org = (50, 50) 
+
+            cString = cString+": "+str(round(traffic_light_handler.tl_info.traffic_light[0].confidence,4))
+            
+            # fontScale 
+            fontScale = 1
+            
+            # Line thickness of 2 px 
+            thickness = 2
+            
+            # Using cv2.putText() method 
+            cv2.putText(img, cString, org, font,  
+                            fontScale, color, thickness, cv2.LINE_AA) 
+            
+            cv2.putText(img, "distance to stop: "+str(round(traffic_light_handler.tl_info.traffic_light_debug.distance_to_stop_line,4)), (50,90), font,  
+                        fontScale, color, thickness, cv2.LINE_AA) 
+            
+            img = cv2.resize(img, (640,480))
+                        
+
+            cv2.imshow('Image', img)
             cv2.waitKey(1)
-        except:
-            continue
+        # except:
+        #         continue
     
 
     cyber.shutdown()
