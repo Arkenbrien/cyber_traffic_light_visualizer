@@ -45,10 +45,6 @@ class traffic_img_listener:
             
             self.init_ts = msg_camera.header.timestamp_sec
             self.is_first_frame = False
-
-    def get_init_ts(self, msg_camera):
-        
-        init_ts = 1
         
     def color_check(self, colorState):
         
