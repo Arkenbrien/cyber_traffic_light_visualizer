@@ -2,6 +2,14 @@ syntax = "proto3";
 
 package trafficLightVis;  // Replace with your actual package name
 
+message Header {
+  // Message publishing time in seconds.
+  double timestamp_sec = 1;
+  // Camera Sensor timestamp for nano-second.
+  uint64 camera_timestamp = 2;
+
+}
+
 message TrafficLightBox {
   int32 x = 1;
   int32 y = 2;
@@ -58,6 +66,5 @@ message TrafficLightDetection {
     CAMERA_FRONT_WIDE = 3;
   }
   CameraID camera_id = 5;
-  // Optional header field if it's not defined in this .proto file
-  // apollo.common.Header header = 2;
+
 }
