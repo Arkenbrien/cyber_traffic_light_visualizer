@@ -40,7 +40,7 @@ class traffic_img_listener:
         self.image_25mm = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
         self.image_25mm_ts = msg_camera.header.timestamp_sec
         
-        
+        # print(msg_camera.header)
         if self.is_first_frame == True:
             
             self.init_ts = msg_camera.header.timestamp_sec
@@ -63,7 +63,7 @@ class traffic_img_listener:
         return cString, color
         
     def tl_info_callback(self, tl_msg):
-        
+        print(tl_msg)
         self.tl_info = tl_msg
         
     def cropbox_printer(self, roi, bColor):
@@ -145,13 +145,14 @@ if __name__ == '__main__':
     
     time.sleep(1)
     
-    out_video = cv2_video_writer(str(time.time()), traffic_light_handler.image_6mm_ts)
+    # out_video = cv2_video_writer(str(time.time()), traffic_light_handler.image_6mm_ts)
 
     while 1:
         
         ts = traffic_light_handler.image_6mm_ts
         
         if traffic_light_handler.tl_info.contain_lights:
+            # print(traffic_light_handler.tl_info)
             
             if traffic_light_handler.tl_info.camera_id == 2:
                img = traffic_light_handler.image_6mm
@@ -175,7 +176,7 @@ if __name__ == '__main__':
             
             img = cv2.resize(img, (1360,768))
             
-            out_video.add_frame(img, ts)
+            # out_video.add_frame(img, ts)
             
             cv2.imshow('Image', img)
             cv2.waitKey(1)
@@ -183,7 +184,7 @@ if __name__ == '__main__':
         else:
             
             img = traffic_light_handler.img_6mm
-            out_video.add_frame(img, traffic_light_handler.image_6mm_ts)
+            # out_video.add_frame(img, traffic_light_handler.image_6mm_ts)
             cv2.imshow('Image', img)
             cv2.waitKey(1)
 
