@@ -64,7 +64,6 @@ class traffic_img_listener:
         
     def tl_info_callback(self, tl_msg):
         
-        # print(tl_msg)
         self.tl_info = tl_msg
         
     def cropbox_printer(self, roi, bColor):
@@ -90,11 +89,8 @@ class traffic_img_listener:
         font = cv2.FONT_HERSHEY_SIMPLEX 
         fontScale = 1
         thickness = 2     
-        # Using cv2.putText() method 
         cv2.putText(img, cString, corg, font, fontScale, color, thickness, cv2.LINE_AA) 
         cv2.putText(img, dString, dorg, font, fontScale, color, thickness, cv2.LINE_AA)
-        
-        
         
 class cv2_video_writer:
     
@@ -111,11 +107,7 @@ class cv2_video_writer:
         
     def add_frame(self, img, ts):
         
-        # print(ts != self.init_ts, self.first_frame, self.append_ready)
-        # print(self.append_ready, self.first_frame, self.exported)
-        # print(self.init_ts, ts)
         self.ts = ts
-        # print('{0:.30f}'.format(self.init_ts), '{0:.30f}'.format(self.ts))
         
         if self.first_frame == True:
             self.video.write(img)
@@ -132,10 +124,6 @@ class cv2_video_writer:
                 self.video.write(img)
                 self.export_video()
                 self.exported = True
-            
-        # else:
-            
-        #     print('D')
         
     def export_video(self):
         self.video.release()
