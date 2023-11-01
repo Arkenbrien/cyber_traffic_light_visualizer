@@ -92,21 +92,30 @@ class cv2_video_writer:
         
         self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         self.output_name = name + ".avi"
-        self.video = cv2.VideoWriter(self.output_name, self.fourcc, 60, (1360,768))
-        self.export_ready = True
+        self.video = cv2.VideoWriter(self.output_name, self.fourcc, 120, (1360,768))
+        self.append_ready = True
         self.init_ts = init_ts
+        self.first_frame = True
         
     def add_frame(self, img, ts):
         
-        print(ts != self.init_ts, self.export_ready)
+        print(ts != self.init_ts, self.first_frame, self.append_ready)
         
-        if ts != self.init_ts and self.export_ready:
+        if self.first_frame == True:
+            self.video.write(img)
+            print('IMAGE APPEHNDED') 
+            self.first_frame = False
+            
+        if ts!= self.init_ts and not self.first_frame and self.append_ready:
             self.video.write(img)
             print('IMAGE APPEHNDED')
-        else:
+            
+        if ts == self.init_ts and not self.first_frame:
+            self.video.write(img)
+            print('IMAGE APPEHNDED')
+            print('LAST FRAME REACHED')
+            self.append_ready = False
             self.export_video()
-            self.export_ready = False
-            print('NO IMAGE APPEHNDED')
         
     def export_video(self):
         self.video.release()
