@@ -6,10 +6,9 @@ python3
 opencv-python
 numpy
 ```
+If any changes are required to the .proto, protoc is also required.
 
 ## Installation:
-
-If any changes are required to the .proto, protoc is also required.
 
 Place traffic_light_pb2.py, and light_detection_project_p3.py into the following folder if there are any issues with running the scripts.
 
