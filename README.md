@@ -1,6 +1,6 @@
 # Cyber Traffic Light Visualizer
 
-requires:
+Requires:
 ```
 python3
 opencv-python
