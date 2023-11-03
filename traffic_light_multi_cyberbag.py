@@ -12,7 +12,6 @@ from modules.drivers.proto.sensor_image_pb2 import CompressedImage
 from traffic_light_pb2 import TrafficLightDetection, TrafficLightDebug, TrafficLight
 import numpy as np
 import cv2
-from scipy.interpolate import interp1d
 
 os.system('clear')
 
@@ -37,23 +36,18 @@ class sequential_tl_cyberbag_image_exporter:
         # self.export_folder          = "/media/autobuntu/chonk/chonk/git_repos/apollo/10252023_blue_route/"
         self.export_folder          = "/home/autobuntu/Videos/cyber_image_exporter/"
         self.export_dimensions      = (1360,768)
-        self.last_file             = False
-        
-        # Init the video file:
-        # self.to_video = cv2_video_writer(str(time.time()), self.export_dimensions)
+        self.last_file              = False
         
         # Init the video logic - If the field changes from True -> False, the video will be exported.
         # Conversely, if the field changes from False -> true, a new video instance will be created using the
         # self.to_video function. The reason why this exists is that the field may be true/false across multiple
         # cyberbags, and this value will track persistance across the cyberbags. A video is also created at the
         # end of all the cyberbags.
-        self.ready_to_append = False
+        self.ready_to_append        = False
 
         # Begin parsing data in files
         print("=" *80)
         print('--------- Parsing data ---------')
-        
-        print(len(self.record_files))
 
         for rfile in self.record_files:
             
@@ -70,8 +64,11 @@ class sequential_tl_cyberbag_image_exporter:
             idx_25 = 0
             idx_tl = 0
 
+            # Reads the file
             freader = record.RecordReader(self.record_folder+'/'+rfile)
             
+            # Reads each channel. If the channel name is one of the camera topics or the traffic light topic,
+            # data is pulled and appended to 
             for channelname, msg, datatype, timestamp in freader.read_messages():
                 
                 if channelname == self.camera_topic_06mm:
@@ -81,33 +78,49 @@ class sequential_tl_cyberbag_image_exporter:
                     data_dump_06mm[idx_06] = msg_camera
                     idx_06 += 1
 
-                if channelname == self.camera_topic_25mm:
+                elif channelname == self.camera_topic_25mm:
                     
                     msg_camera = CompressedImage()
                     msg_camera.ParseFromString(str(msg))
                     data_dump_25mm[idx_25] = msg_camera
                     idx_25 += 1
 
-                if channelname == self.traffic_light_topic:
+                elif channelname == self.traffic_light_topic:
                     
                     msg_traffic_light = TrafficLightDetection()
                     msg_traffic_light.ParseFromString(str(msg))
                     data_dump_tl[idx_tl] = msg_traffic_light
                     idx_tl += 1
                     
+                else:
+                    
+                    continue
+                    
+            # Sends the data from the single file to be compiled in a seperate function
             self.message_compiler(data_dump_06mm, data_dump_25mm, data_dump_tl)
             
-            print(self.last_file)
-            
+            # If it's the last file in the folder, it will export any video that may be open at the end of the file.
             if rfile == len(self.record_files)-1:
-                print('Hey!')
                 self.last_file = True
             
             
     def message_compiler(self, data_06mm, data_25mm, data_tl):
         
+        # For each message in the traffic light array, check to see if it contains lights.
+        # If true:
+        # 1) Video is created if one has not been created previously (see note on self.ready_to_append) in the __init__ section
+        # 2) Determine which camera is being used to detect the light
+        # 3) Grab current traffic light topic camera ts as well as the next sequential one
+        # 4) Grab all camera frames between the two time stamps 
+        # 5) Grab the traffic light text and boxes
+        # 6) Create the image and push the rectangles
+        # If false:
+        # Export the video if a video is currently being created
         for msg in data_tl:
             
+            # 1) Video is created if one has not been created previously (see note on self.ready_to_append) in the __init__ section
+            # OR
+            # Export the video if a video is currently being created
             if data_tl[msg].contain_lights is True and self.ready_to_append is False:
                 time_value = time.time()
                 self.to_video = cv2_video_writer(str(time_value), self.export_dimensions, self.export_folder)
@@ -123,46 +136,53 @@ class sequential_tl_cyberbag_image_exporter:
                 
                 self.cString, self.color = self.color_check(data_tl[msg].traffic_light[0].color)
                 
+                # 2) Determine which camera is being used to detect the light
                 camera_id = data_tl[msg].camera_id
                 camera_ts = round(data_tl[msg].header.camera_timestamp/(10e8),2)
                 
                 if camera_id == 0:
                     
+                    # 3) Grab current traffic light topic camera ts as well as the next sequential one
                     self.camera_idx_start = self.get_timestamp(camera_ts, data_25mm)
                     
                     if msg < len(data_tl)-1:
                         
                         camera_ts_next = round(data_tl[msg+1].header.camera_timestamp/(10e8),2)
                         self.camera_idx_end = self.get_timestamp(camera_ts_next, data_25mm)
-                        # print(camera_id, camera_ts, camera_ts_next, self.camera_idx_start, self.camera_idx_end)
                         
                     else:
                         
                         self.camera_idx_end = len(data_25mm)-1
-                        # print(camera_id, camera_ts, self.camera_idx_start, self.camera_idx_end)
-                        
+                    
+                    # 4) Grab all camera frames between the two time stamps
+                    # 5) Grab the traffic light text and boxes
+                    # 6) Create the image and push the rectangles
                     self.append_images(self.camera_idx_start, self.camera_idx_end, self.cString, self.color, data_tl[msg], data_25mm)
                         
                 if camera_id == 2:
                     
+                    # 3) Grab current traffic light topic camera ts as well as the next sequential one
                     self.camera_idx_start = self.get_timestamp(camera_ts, data_06mm)
                     
                     if msg < len(data_tl)-1:
                         
                         camera_ts_next = round(data_tl[msg+1].header.camera_timestamp/(10e8),2)
                         self.camera_idx_end = self.get_timestamp(camera_ts_next, data_06mm)
-                        # print(camera_id, camera_ts, camera_ts_next, self.camera_idx_start, self.camera_idx_end)
                         
                     else:
                         
                         self.camera_idx_end = len(data_06mm)-1
-                        # print(camera_id, camera_ts, self.camera_idx_start, self.camera_idx_end)
-                        
+                    
+                    # 4) Grab all camera frames between the two time stamps
+                    # 5) Grab the traffic light text and boxes
+                    # 6) Create the image and push the rectangles
                     self.append_images(self.camera_idx_start, self.camera_idx_end, self.cString, self.color, data_tl[msg], data_06mm)
                         
                         
     def get_timestamp(self, ts, data):
         
+        # Var init - 0 in case the ts is the first item in the array and there's
+        # some weirdness going on with the ts not matching up
         camera_idx = 0
 
         for idx in data:
@@ -177,6 +197,9 @@ class sequential_tl_cyberbag_image_exporter:
 
     def append_images(self, start_idx, end_idx, cString, color, data_tl, data_cam):
         
+        # 4) Grab all camera frames between the two time stamps
+        # 5) Grab the traffic light text and boxes
+        # 6) Create the image and push the rectangles
         for img_idx in range(start_idx, end_idx-1):
 
             # Process image data
@@ -189,6 +212,7 @@ class sequential_tl_cyberbag_image_exporter:
             self.box_printer(data_tl.traffic_light_debug.box, color)
             self.debug_box_printer(data_tl.traffic_light_debug.box, color)
             
+            # Determine distance to stoping line
             dString = "distance to stop: "+str(round(data_tl.traffic_light_debug.distance_to_stop_line,4))
             
             self.text_handler(cString, dString, color)
@@ -232,10 +256,14 @@ class sequential_tl_cyberbag_image_exporter:
                 
     def color_check(self, colorState):
         
-        if colorState == 3:
+        # initiate the variables...
+        color = (0,0,0)
+        cString = "unknown"
+        
+        if colorState == 0:
             
-            color = (0,255,0)
-            cString = "green"
+            color = (0,0,0)
+            cString = "unknown"        
             
         elif colorState == 1:
             
@@ -247,16 +275,12 @@ class sequential_tl_cyberbag_image_exporter:
             color = (0,255,255)
             cString = "yellow"
             
-        elif colorState == 0:
+        elif colorState == 3:
             
-            color = (0,0,0)
-            cString = "unknown"
-            
+            color = (0,255,0)
+            cString = "green"
+
         return cString, color
-    
-        print("=" *60)
-        print('DONE: records parsed and data saved to: \n  ' + self.export_folder)
-        print("=" *60)
         
 class cv2_video_writer:
     
@@ -266,15 +290,16 @@ class cv2_video_writer:
         self.output_name = name + ".avi"
         self.video = cv2.VideoWriter(self.output_name, self.fourcc, 20, dim)
         self.dim = dim
+        self.show_video = False
 
     def add_frame(self, img):
         
         img = cv2.resize(img, self.dim)
         self.video.write(img)
-        # print('frame added')
-        # cv2.imshow('Image', img)
-        # cv2.waitKey(120)
-
+        if self.show_video:
+            print('frame added')
+            cv2.imshow('Image', img)
+            cv2.waitKey(50)
         
     def export_video(self):
         
