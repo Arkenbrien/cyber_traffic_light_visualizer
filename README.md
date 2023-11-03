@@ -1,14 +1,17 @@
 # Cyber Traffic Light Visualizer
 
+![Alt text](https://github.com/Arkenbrien/cyber_traffic_light_visualizer/blob/main/IMAGES/jiff.gif?raw=true)
+
 Requires:
 ```
 python3
 opencv-python
 numpy
 ```
-If any changes are required to the .proto, protoc is also required.
 
 ## Installation:
+
+If any changes are required to the .proto, protoc is also required.
 
 Place traffic_light_pb2.py, and light_detection_project_p3.py into the following folder if there are any issues with running the scripts.
 
