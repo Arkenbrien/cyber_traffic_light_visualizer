@@ -54,6 +54,8 @@ class sequential_tl_cyberbag_image_exporter:
             print("=" *80)
             print("parsing record file: %s" % rfile)
             
+            self.file_name = rfile
+            
             # Probably a more elegant way to do this but this initiates the temporary data bins for each message
             # This is re-initiated each loop so that each file gets examined individually.
             data_dump_06mm = {}
@@ -123,14 +125,33 @@ class sequential_tl_cyberbag_image_exporter:
             # Export the video if a video is currently being created
             if data_tl[msg].contain_lights is True and self.ready_to_append is False:
                 time_value = time.time()
-                self.to_video = cv2_video_writer(str(time_value), self.export_dimensions, self.export_folder)
-                print('NEW VIDEO CREATED WITH TS:', time_value)
+                
+                file_name = str(self.file_name) + '_' + str(data_tl[msg].header.camera_timestamp/(10e8))
+                
+                self.to_video = cv2_video_writer(file_name, self.export_dimensions, self.export_folder)
+                print('NEW VIDEO CREATED WITH NAME: ' + file_name)
                 self.ready_to_append = True
                 
+            # elif data_tl[msg].contain_lights is False and data_tl[msg+2].contain_lights is False and self.ready_to_append is True:
+            #     self.to_video.export_video
+            #     self.ready_to_append = False
+            #     print('VIDEO EXPORTED!')
+            
+            # Handling the case of a single tl frame not containing lights for some bizzare reason. 
+            # Will not handle cross-handle blips where the last frame is false but the first frame in the next file is true
             elif data_tl[msg].contain_lights is False and self.ready_to_append is True:
-                self.to_video.export_video
-                self.ready_to_append = False
-                print('VIDEO EXPORTED!')
+                
+                try: 
+                    if data_tl[msg+2].contain_lights is False:
+                        self.to_video.export_video
+                        self.ready_to_append = False
+                        print('VIDEO EXPORTED!')
+                except:
+                        self.to_video.export_video
+                        self.ready_to_append = False
+                        print('VIDEO EXPORTED!')
+                    
+                
 
             if data_tl[msg].contain_lights == True:
                 
@@ -235,6 +256,8 @@ class sequential_tl_cyberbag_image_exporter:
             
     def debug_box_printer(self, roi, bColor):
         
+        # Boxes are colored the same as the predicted light except in the case if the box is the 
+        # 'selected' box. In which case, the box is white.
         for b in roi:
             
             cv2.rectangle(self.to_video.image,(b.x, b.y),(b.x+b.width, b.y+b.width),bColor, 2)
@@ -286,9 +309,9 @@ class cv2_video_writer:
     
     def __init__(self, name, dim, export_folder):
         
-        self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        self.output_name = name + ".avi"
-        self.video = cv2.VideoWriter(self.output_name, self.fourcc, 20, dim)
+        self.fourcc = cv2.VideoWriter_fourcc(*'avc1')
+        self.output_name = name + ".mp4"
+        self.video = cv2.VideoWriter(self.output_name, self.fourcc, 10, dim)
         self.dim = dim
         self.show_video = False
 
@@ -304,7 +327,9 @@ class cv2_video_writer:
     def export_video(self):
         
         self.video.release()
+        print('')
         print('VIDEO RELEASED') 
+        print('')
 
 
 ###########################################################
