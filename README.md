@@ -33,6 +33,8 @@ This will create a short video of just the one file, as well as creating a visua
 
 For exporting videos of all traffic light intersections across multiple files, run traffic_light_multi_cyberbag.py. 
 
+NOTE: Update the export_folder variable to the desired export location, else the videos will be exported to the python script's location.
+
 - ```python traffic_light_multi_cyberbag.py```
 
 This will read each file sequentially and create a new video for each individual intersection with a light, along with all the debug boxes from the traffic light topic.

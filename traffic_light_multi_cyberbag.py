@@ -38,11 +38,15 @@ class sequential_tl_cyberbag_image_exporter:
         self.export_folder          = "/media/autobuntu/chonk/chonk/git_repos/apollo/cyber_image_exporter/"
         self.export_dimensions      = (1360,768)
         
-        if not os.path.exists(self.export_folder):
-            os.makedirs(self.export_folder)
-            print('Export Folder Created: ', self.export_folder)
-        else:
-            print('Export Folder Already Exists: ', self.export_folder)
+        try:
+            if not os.path.exists(self.export_folder):
+                os.makedirs(self.export_folder)
+                print('Export Folder Created: ', self.export_folder)
+            else:
+                print('Export Folder Already Exists: ', self.export_folder)
+        except OSError:
+            print('OSError: unable to create export_folder. Using default folder location: ' os.path.dirname(os.path.abspath(__file__)))
+            self.export_folder = os.path.dirname(os.path.abspath(__file__))
         
         # Init the video logic - If the field changes from True -> False, the video will be exported.
         # Conversely, if the field changes from False -> true, a new video instance will be created using the
