@@ -199,10 +199,6 @@ class sequential_tl_cyberbag_image_exporter:
                     # 5) Grab the traffic light text and boxes
                     # 6) Create the image and push the rectangles
                     self.append_images(self.camera_idx_start, self.camera_idx_end, self.cString, self.color, data_tl[msg], data_06mm)
-                
-                # print('camera idx start: ', self.camera_idx_start, self.camera_idx_end)
-                    
-        # time.sleep(100)
                         
                         
     def get_timestamp(self, ts, data):
@@ -227,7 +223,6 @@ class sequential_tl_cyberbag_image_exporter:
         # 5) Grab the traffic light text and boxes
         # 6) Create the image and push the rectangles
         
-        # print('range to grab: ', range(start_idx, end_idx+1))
         for img_idx in range(start_idx, end_idx+1):
 
             # Process image data
