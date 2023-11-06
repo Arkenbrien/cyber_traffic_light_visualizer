@@ -45,7 +45,7 @@ class sequential_tl_cyberbag_image_exporter:
             else:
                 print('Export Folder Already Exists: ', self.export_folder)
         except OSError:
-            print('OSError: unable to create export_folder. Using default folder location: ' os.path.dirname(os.path.abspath(__file__)))
+            print('OSError: unable to create export_folder. Using default folder location: ', os.path.dirname(os.path.abspath(__file__)))
             self.export_folder = os.path.dirname(os.path.abspath(__file__))
         
         # Init the video logic - If the field changes from True -> False, the video will be exported.
