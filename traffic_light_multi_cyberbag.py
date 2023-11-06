@@ -97,6 +97,7 @@ class sequential_tl_cyberbag_image_exporter:
                 else:
                     
                     continue
+            
                     
             # Sends the data from the single file to be compiled in a seperate function
             self.message_compiler(data_dump_06mm, data_dump_25mm, data_dump_tl)
@@ -198,6 +199,10 @@ class sequential_tl_cyberbag_image_exporter:
                     # 5) Grab the traffic light text and boxes
                     # 6) Create the image and push the rectangles
                     self.append_images(self.camera_idx_start, self.camera_idx_end, self.cString, self.color, data_tl[msg], data_06mm)
+                
+                # print('camera idx start: ', self.camera_idx_start, self.camera_idx_end)
+                    
+        # time.sleep(100)
                         
                         
     def get_timestamp(self, ts, data):
@@ -221,7 +226,9 @@ class sequential_tl_cyberbag_image_exporter:
         # 4) Grab all camera frames between the two time stamps
         # 5) Grab the traffic light text and boxes
         # 6) Create the image and push the rectangles
-        for img_idx in range(start_idx, end_idx-1):
+        
+        # print('range to grab: ', range(start_idx, end_idx+1))
+        for img_idx in range(start_idx, end_idx+1):
 
             # Process image data
             self.to_video.decoded_image = cv2.imdecode(np.frombuffer(data_cam[img_idx].data, np.uint8), cv2.IMREAD_COLOR)
@@ -311,7 +318,7 @@ class cv2_video_writer:
         
         self.fourcc = cv2.VideoWriter_fourcc(*'avc1')
         self.output_name = name + ".mp4"
-        self.video = cv2.VideoWriter(self.output_name, self.fourcc, 10, dim)
+        self.video = cv2.VideoWriter(self.output_name, self.fourcc, 20, dim)
         self.dim = dim
         self.show_video = False
 

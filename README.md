@@ -41,4 +41,3 @@ This will read each file sequentially and create a new video for each individual
 ## To-Do:
 
 - Custom file output
-- Fix frame rate being too high
