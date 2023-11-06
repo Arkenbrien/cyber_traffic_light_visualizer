@@ -30,13 +30,19 @@ class sequential_tl_cyberbag_image_exporter:
         # self.record_folder          = "/media/autobuntu/chonk/chonk/git_repos/apollo/cyber_bag_test"
         self.record_folder          = "/media/autobuntu/chonk/chonk/git_repos/apollo/10252023_blue_route"
 
+        # Sorts the files within the record folder
         self.record_files = sorted(os.listdir(self.record_folder))
 
-        # Export Option
+        # Export Options
         # self.export_folder          = "/media/autobuntu/chonk/chonk/git_repos/apollo/10252023_blue_route/"
-        self.export_folder          = "/home/autobuntu/Videos/cyber_image_exporter/"
+        self.export_folder          = "/media/autobuntu/chonk/chonk/git_repos/apollo/cyber_image_exporter/"
         self.export_dimensions      = (1360,768)
-        self.last_file              = False
+        
+        if not os.path.exists(self.export_folder):
+            os.makedirs(self.export_folder)
+            print('Export Folder Created: ', self.export_folder)
+        else:
+            print('Export Folder Already Exists: ', self.export_folder)
         
         # Init the video logic - If the field changes from True -> False, the video will be exported.
         # Conversely, if the field changes from False -> true, a new video instance will be created using the
@@ -44,6 +50,7 @@ class sequential_tl_cyberbag_image_exporter:
         # cyberbags, and this value will track persistance across the cyberbags. A video is also created at the
         # end of all the cyberbags.
         self.ready_to_append        = False
+        self.last_file              = False
 
         # Begin parsing data in files
         print("=" *80)
@@ -132,12 +139,7 @@ class sequential_tl_cyberbag_image_exporter:
                 self.to_video = cv2_video_writer(file_name, self.export_dimensions, self.export_folder)
                 print('NEW VIDEO CREATED WITH NAME: ' + file_name)
                 self.ready_to_append = True
-                
-            # elif data_tl[msg].contain_lights is False and data_tl[msg+2].contain_lights is False and self.ready_to_append is True:
-            #     self.to_video.export_video
-            #     self.ready_to_append = False
-            #     print('VIDEO EXPORTED!')
-            
+
             # Handling the case of a single tl frame not containing lights for some bizzare reason. 
             # Will not handle cross-handle blips where the last frame is false but the first frame in the next file is true
             elif data_tl[msg].contain_lights is False and self.ready_to_append is True:
@@ -151,8 +153,6 @@ class sequential_tl_cyberbag_image_exporter:
                         self.to_video.export_video
                         self.ready_to_append = False
                         print('VIDEO EXPORTED!')
-                    
-                
 
             if data_tl[msg].contain_lights == True:
                 
@@ -199,6 +199,10 @@ class sequential_tl_cyberbag_image_exporter:
                     # 5) Grab the traffic light text and boxes
                     # 6) Create the image and push the rectangles
                     self.append_images(self.camera_idx_start, self.camera_idx_end, self.cString, self.color, data_tl[msg], data_06mm)
+                
+                # print('camera idx start: ', self.camera_idx_start, self.camera_idx_end)
+                    
+        # time.sleep(100)
                         
                         
     def get_timestamp(self, ts, data):
@@ -223,6 +227,7 @@ class sequential_tl_cyberbag_image_exporter:
         # 5) Grab the traffic light text and boxes
         # 6) Create the image and push the rectangles
         
+        # print('range to grab: ', range(start_idx, end_idx+1))
         for img_idx in range(start_idx, end_idx+1):
 
             # Process image data
@@ -312,7 +317,7 @@ class cv2_video_writer:
     def __init__(self, name, dim, export_folder):
         
         self.fourcc = cv2.VideoWriter_fourcc(*'avc1')
-        self.output_name = name + ".mp4"
+        self.output_name = export_folder + name + ".mp4"
         self.video = cv2.VideoWriter(self.output_name, self.fourcc, 20, dim)
         self.dim = dim
         self.show_video = False

@@ -37,7 +37,3 @@ For exporting videos of all traffic light intersections across multiple files, r
 
 This will read each file sequentially and create a new video for each individual intersection with a light, along with all the debug boxes from the traffic light topic.
 
-
-## To-Do:
-
-- Custom file output
