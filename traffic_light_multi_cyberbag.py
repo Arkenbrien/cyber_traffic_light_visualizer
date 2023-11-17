@@ -51,8 +51,8 @@ class sequential_tl_cyberbag_image_exporter:
         # Init the video logic - If the field changes from True -> False, the video will be exported.
         # Conversely, if the field changes from False -> true, a new video instance will be created using the
         # self.to_video function. The reason why this exists is that the field may be true/false across multiple
-        # cyberbags, and this value will track persistance across the cyberbags. A video is also created at the
-        # end of all the cyberbags.
+        # cyberbags, and this value will track persistance across the cyberbags. 
+        # Additionally, any open video is ended if there are no more files
         self.ready_to_append        = False
         self.last_file              = False
 
