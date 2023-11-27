@@ -181,16 +181,17 @@ class sequential_tl_cyberbag_image_exporter:
             elif data_tl[msg].contain_lights is False:
                 
                 try: 
-                    if data_tl[msg+2].contain_lights is False:
+                    if data_tl[msg+2].contain_lights is False and self.ready_to_append is True:
                         self.to_video.export_video
-                        # self.ready_to_append = False
+                        self.ready_to_append = False
                         print('VIDEO EXPORTED!')
                 except:
                     
                     try:
-                        self.to_video.export_video
-                        # self.ready_to_append = False
-                        print('VIDEO EXPORTED!')
+                        if self.ready_to_append is True:
+                            self.to_video.export_video
+                            self.ready_to_append = False
+                            print('VIDEO EXPORTED!')
                         
                     except:
                         
