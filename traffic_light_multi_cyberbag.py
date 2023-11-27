@@ -35,6 +35,8 @@ class sequential_tl_cyberbag_image_exporter:
 
         # Sorts the files within the record folder
         self.record_files = sorted(os.listdir(self.record_folder))
+        
+        self.record_files = self.record_files[170:]
 
         # Export Options
         # self.export_folder          = "/media/autobuntu/chonk/chonk/git_repos/apollo/10252023_blue_route/"
@@ -58,6 +60,7 @@ class sequential_tl_cyberbag_image_exporter:
         # end of all the cyberbags.
         self.ready_to_append        = False
         self.last_file              = False
+        self.old_tl_id              = int(0000)
 
         # Begin parsing data in files
         print("=" *80)
@@ -153,29 +156,105 @@ class sequential_tl_cyberbag_image_exporter:
             # 1) Video is created if one has not been created previously (see note on self.ready_to_append) in the __init__ section
             # OR
             # Export the video if a video is currently being created
-            if data_tl[msg].contain_lights is True and self.ready_to_append is False:
+            # if data_tl[msg].contain_lights is True and self.ready_to_append is False:
+
+            #     self.new_tl_id = int(data_tl[msg].traffic_light[0].id)
                 
-                time_value = time.time()
+            #     if self.old_tl_id is not self.new_tl_id:
+                    
+            #         self.old_tl_id = self.new_tl_id
                 
-                file_name = str(self.file_name) + '_' + str(data_tl[msg].header.camera_timestamp/(10e8))
+            #         file_name = str(self.file_name) + '_' + str(self.new_tl_id)
+                    
+            #         self.to_video = cv2_video_writer(file_name, self.export_dimensions, self.export_folder)
+            #         print('NEW VIDEO CREATED WITH NAME: ' + file_name)
+            #         self.ready_to_append = True
+            #         # self.traffic_light_id = data_tl[msg].traffic_light[0].id
+            #         # print(self.traffic_light_id)
+                    
+            #     # elif self.old_tl_id is self.new_tl_id:
                 
-                self.to_video = cv2_video_writer(file_name, self.export_dimensions, self.export_folder)
-                print('NEW VIDEO CREATED WITH NAME: ' + file_name)
-                self.ready_to_append = True
+            # elif data_tl[msg].contain_lights is True and self.ready_to_append is True:
+                
+            #     self.new_tl_id = int(data_tl[msg].traffic_light[0].id)
+                
+            #     if self.old_tl_id == self.new_tl_id:
+                    
+            #         self.old_tl_id = self.new_tl_id
+                    
+            #     elif self.old_tl_id != self.new_tl_id:
+                
+            #         file_name = str(self.file_name) + '_' + str(self.new_tl_id)
+                    
+            #         self.to_video = cv2_video_writer(file_name, self.export_dimensions, self.export_folder)
+            #         print('NEW VIDEO CREATED WITH NAME: ' + file_name)
+                    
+                    # self.ready_to_append = True
+                    # self.traffic_light_id = data_tl[msg].traffic_light[0].id
+                
+                # print(self.new_tl_id, self.old_tl_id)
+                # print(type(self.new_tl_id), type(self.old_tl_id))
+                # print(int(self.old_tl_id) != int(self.new_tl_id))
+                
+                # is_same = int(self.old_tl_id) == int(self.new_tl_id)
+                
+                # time.sleep(10)
+                # print(int(self.new_tl_id), int(self.old_tl_id))
+                                
+                # if self.new_tl_id != self.old_tl_id is True:
+                    
+                #     self.old_tl_id = self.new_tl_id
+                    
+                #     self.to_video.export_video
+                #     print('VIDEO EXPORTED!')
+                    
+                #     file_name = str(self.file_name) + '_' + str(self.new_tl_id)
+                #     self.to_video = cv2_video_writer(file_name, self.export_dimensions, self.export_folder)
+                #     print('NEW VIDEO CREATED WITH NAME: ' + file_name)
+                #     self.traffic_light_id = data_tl[msg].traffic_light[0].id     
+                
+                # if self.new_tl_id != self.old_tl_id:
+                #     print('TRUE')
+                # elif self.new_tl_id != self.old_tl_id:
+                #     print('FALSE')
+                    
+                    
+            if data_tl[msg].contain_lights is True:
+                
+                self.new_tl_id = int(data_tl[msg].traffic_light[0].id)
+                
+                if self.new_tl_id != self.old_tl_id:
+                    
+                    self.old_tl_id = self.new_tl_id
+                
+                    file_name = str(self.file_name) + '_' + str(self.new_tl_id)
+                    
+                    self.to_video = cv2_video_writer(file_name, self.export_dimensions, self.export_folder)
+                    print('NEW VIDEO CREATED WITH NAME: ' + file_name)
+                    
+                elif self.new_tl_id == self.old_tl_id:
+                    
+                    print('Continuing video')
 
             # Handling the case of a single tl frame not containing lights for some bizzare reason. 
             # Will not handle cross-handle blips where the last frame is false but the first frame in the next file is true
-            elif data_tl[msg].contain_lights is False and self.ready_to_append is True:
+            elif data_tl[msg].contain_lights is False:
                 
                 try: 
                     if data_tl[msg+2].contain_lights is False:
                         self.to_video.export_video
-                        self.ready_to_append = False
+                        # self.ready_to_append = False
                         print('VIDEO EXPORTED!')
                 except:
+                    
+                    try:
                         self.to_video.export_video
-                        self.ready_to_append = False
+                        # self.ready_to_append = False
                         print('VIDEO EXPORTED!')
+                        
+                    except:
+                        
+                        pass
 
             if data_tl[msg].contain_lights == True:
                 
@@ -188,13 +267,6 @@ class sequential_tl_cyberbag_image_exporter:
                 # 2.5) Grabs the drive state text
                 self.drive_state_idx = self.get_timestamp(tl_ts, data_chassis)
                 self.drive_state = data_chassis[self.drive_state_idx].driving_mode
-                
-                # Temp Debug:
-                if self.drive_state is not 0 or self.drive_state is not 1:
-                    print(self.drive_state)
-                    print(data_chassis[self.drive_state_idx])
-                    # time.sleep(10)
-                
                 self.dsString, self.dsColor = self.get_drive_state(self.drive_state)
 
                 if camera_id == 0:
@@ -236,8 +308,6 @@ class sequential_tl_cyberbag_image_exporter:
                     self.append_images(self.camera_idx_start, self.camera_idx_end, self.cString, self.color, self.dsString, self.dsColor, data_tl[msg], data_06mm)
                     
 
-                
-                     
     def get_timestamp(self, ts, data):
         
         # Finds the index of the closest matching timestamp with a desired timestamp.
@@ -372,6 +442,7 @@ class sequential_tl_cyberbag_image_exporter:
 
         return cString, color
     
+    
     def get_drive_state(self, drive_state):
         
         # Gets the string for the drive state
@@ -385,7 +456,7 @@ class sequential_tl_cyberbag_image_exporter:
             
         elif drive_state == 1:
             dsString = "COMPLETE_AUTO_DRIVE"
-            dsColor = (0, 0, 255)
+            dsColor = (255, 0, 0)
         
         return dsString, dsColor
         
