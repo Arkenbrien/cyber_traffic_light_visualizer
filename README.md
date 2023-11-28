@@ -43,16 +43,16 @@ For converting videos from .avi to .mp4, the following script is provided:
 
 - ```avi_to_mp4.sh```
 
-Here is the ussage: 
+Here is the usage: 
 
-Assumes current folder for both input, creates mp4_output folder in script directory for output
+Assumes current folder for both input, creates mp4_output folder in script directory for output.
 
 - ```./convert_avi_to_mp4.sh``` 
 
-Uses /path/to/input_folder for both input, creates mp4_output folder in script directory for output
+Uses /path/to/input_folder for both input, creates mp4_output folder in script directory for output.
 
 - ```./convert_avi_to_mp4.sh /path/to/input_folder```
 
-Uses specified folders for input and output
+Uses specified folders for input and output.
 
 - ```./convert_avi_to_mp4.sh /path/to/input_folder /path/to/output_folder```
