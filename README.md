@@ -1,7 +1,7 @@
 # Cyber Traffic Light Visualizer
 
 ![Alt text](https://github.com/Arkenbrien/cyber_traffic_light_visualizer/blob/main/IMAGES/jiff.gif?raw=true)
-
+- 
 Requires:
 ```
 python3
@@ -39,3 +39,14 @@ NOTE: Update the export_folder variable to the desired export location, else the
 
 This will read each file sequentially and create a new video for each individual intersection with a light, along with all the debug boxes from the traffic light topic.
 
+For converting videos from .avi to .mp4, the following script is provided:
+
+- ```avi_to_mp4.sh```
+
+Here is the ussage: 
+Assumes current folder for both input, creates mp4_output folder in script directory for output
+- ```./convert_avi_to_mp4.sh``` 
+Uses /path/to/input_folder for both input, creates mp4_output folder in script directory for output
+- ```./convert_avi_to_mp4.sh /path/to/input_folder```
+Uses specified folders for input and output
+- ```./convert_avi_to_mp4.sh /path/to/input_folder /path/to/output_folder```
